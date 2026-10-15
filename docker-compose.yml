@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  eureka-server:
+    build: ./Eureka
+    ports:
+      - "8761:8761"
+
+  gateway:
+    build: ./Gateway
+    ports:
+      - "8771:8771"
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+
+  auth:
+    build: ./Auth
+    ports:
+      - "8781:8781"
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      DB_HOST: host.docker.internal
+    depends_on:
+      - eureka-server
+
+  productos:
+    build: ./Productos
+    ports:
+      - "8791:8791"
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      DB_HOST: host.docker.internal
+    depends_on:
+      - eureka-server
+
+  pedidos:
+    build: ./Pedidos
+    ports:
+      - "8801:8801"
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      DB_HOST: host.docker.internal
+      RABBIT_HOST: host.docker.internal
+    depends_on:
+      - eureka-server
+      - productos
+
+  delivery:
+    build: ./Delivery
+    ports:
+      - "8811:8811"
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      DB_HOST: host.docker.internal
+      RABBIT_HOST: host.docker.internal
+    depends_on:
+      - eureka-server
+      - pedidos

@@ -1,0 +1,22 @@
+﻿# La Pannacotta - subiendo el proyecto
+/*
+!/.github/
+!/.gitignore
+!/Eureka/
+!/Gateway/
+!/Auth/
+!/Productos/
+!/Pedidos/
+!/Delivery/
+!/pannacotta-web/
+!/k8s/
+!/docker-compose.yml
+target/
+node_modules/
+.angular/
+dist/
+.settings/
+.classpath
+.project
+.factorypath
+*.log

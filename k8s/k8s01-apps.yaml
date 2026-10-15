@@ -1,0 +1,285 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: eureka
+          image: pannacotta-eureka:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8761
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "512Mi"}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka
+spec:
+  selector:
+    app: eureka
+  ports:
+    - port: 8761
+      targetPort: 8761
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: gateway
+          image: pannacotta-gateway:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8771
+          env:
+            - name: EUREKA_URL
+              value: "http://eureka:8761/eureka/"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "512Mi"}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  selector:
+    app: gateway
+  ports:
+    - port: 8771
+      targetPort: 8771
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        - name: esperar-postgres
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo esperando postgres; sleep 3; done']
+      containers:
+        - name: auth
+          image: pannacotta-auth:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8781
+          env:
+            - name: EUREKA_URL
+              value: "http://eureka:8761/eureka/"
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "640Mi"}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+spec:
+  selector:
+    app: auth
+  ports:
+    - port: 8781
+      targetPort: 8781
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productos
+  template:
+    metadata:
+      labels:
+        app: productos
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        - name: esperar-postgres
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo esperando postgres; sleep 3; done']
+      containers:
+        - name: productos
+          image: pannacotta-productos:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8791
+          env:
+            - name: EUREKA_URL
+              value: "http://eureka:8761/eureka/"
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "640Mi"}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: productos
+spec:
+  selector:
+    app: productos
+  ports:
+    - port: 8791
+      targetPort: 8791
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pedidos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pedidos
+  template:
+    metadata:
+      labels:
+        app: pedidos
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        - name: esperar-postgres
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo esperando postgres; sleep 3; done']
+        - name: esperar-rabbitmq
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z rabbitmq 5672; do echo esperando rabbitmq; sleep 3; done']
+      containers:
+        - name: pedidos
+          image: pannacotta-pedidos:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8801
+          env:
+            - name: EUREKA_URL
+              value: "http://eureka:8761/eureka/"
+            - name: DB_HOST
+              value: "postgres"
+            - name: RABBIT_HOST
+              value: "rabbitmq"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "640Mi"}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pedidos
+spec:
+  selector:
+    app: pedidos
+  ports:
+    - port: 8801
+      targetPort: 8801
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delivery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: delivery
+  template:
+    metadata:
+      labels:
+        app: delivery
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        - name: esperar-postgres
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo esperando postgres; sleep 3; done']
+        - name: esperar-rabbitmq
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z rabbitmq 5672; do echo esperando rabbitmq; sleep 3; done']
+      containers:
+        - name: delivery
+          image: pannacotta-delivery:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8811
+          env:
+            - name: EUREKA_URL
+              value: "http://eureka:8761/eureka/"
+            - name: DB_HOST
+              value: "postgres"
+            - name: RABBIT_HOST
+              value: "rabbitmq"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "640Mi"}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: delivery
+spec:
+  selector:
+    app: delivery
+  ports:
+    - port: 8811
+      targetPort: 8811

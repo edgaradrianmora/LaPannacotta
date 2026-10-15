@@ -1,0 +1,66 @@
+# INTEGRACIÓN CONTINUA (CI)
+# Se ejecuta en cada push y en cada pull request: compila y prueba los 6 servicios
+# Java y compila Angular. Si algo falla, GitHub marca la ejecución en rojo.
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend - ${{ matrix.servicio }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false            # si falla un servicio, los demás siguen probándose
+      matrix:
+        servicio: [Eureka, Gateway, Auth, Productos, Pedidos, Delivery]
+    defaults:
+      run:
+        working-directory: ${{ matrix.servicio }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar y ejecutar pruebas (JUnit)
+        run: mvn -B -ntp verify -Dtest='*RepositoryTest' -Dsurefire.failIfNoSpecifiedTests=false
+        
+      - name: Guardar reportes de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-${{ matrix.servicio }}
+          path: ${{ matrix.servicio }}/target/surefire-reports
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend - Angular
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pannacotta-web
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pannacotta-web/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar Angular
+        run: npm run build

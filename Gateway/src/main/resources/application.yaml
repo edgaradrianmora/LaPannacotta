@@ -1,0 +1,43 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:4200"
+                  - "http://127.0.0.1:4200"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            - id: auth
+              uri: lb://Auth
+              predicates:
+                - Path=/auth/**
+            - id: productos
+              uri: lb://Productos
+              predicates:
+                - Path=/productos/**
+            - id: pedidos
+              uri: lb://Pedidos
+              predicates:
+                - Path=/pedidos/**
+            - id: delivery
+              uri: lb://Delivery
+              predicates:
+                - Path=/delivery/**
