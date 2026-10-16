@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,8 +36,13 @@ public class PedidoController {
     }
 
     @PostMapping
-    public Pedido Registrar(@RequestBody PedidoRequest request) {
-        return pedidoModel.Registrar(request);
+    public Pedido Registrar(@RequestBody PedidoRequest request, Authentication authentication) {
+        return pedidoModel.Registrar(request, authentication.getName());
+    }
+    
+    @GetMapping("/mis-pedidos")
+    public List<Pedido> MisPedidos(Authentication authentication) {
+        return pedidoModel.ListarPorUsuario(authentication.getName());
     }
 
     @PutMapping("/{id}/confirmar")

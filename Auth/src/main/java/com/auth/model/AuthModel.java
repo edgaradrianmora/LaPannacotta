@@ -66,9 +66,7 @@ public class AuthModel {
         usuario.setUsername(username);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         usuario.setEstado("ACTIVO");
-        if (usuario.getRol() == null || usuario.getRol().isBlank()) {
-            usuario.setRol("ADMIN");
-        }
+        usuario.setRol("CLIENTE");
 
         Usuario guardado = usuarioRepository.save(usuario);
 

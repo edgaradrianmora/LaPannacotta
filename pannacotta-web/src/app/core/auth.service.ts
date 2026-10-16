@@ -17,6 +17,11 @@ export class AuthService {
 
   readonly usuario = computed(() => this.sesion());
   readonly logueado = computed(() => this.sesion() !== null);
+  readonly esAdmin = computed(() => (this.sesion()?.rol ?? '').toUpperCase() === 'ADMIN');
+  readonly esCliente = computed(() => this.logueado() && !this.esAdmin());
+
+  // Pantalla de inicio según el rol: el administrador va al panel, el cliente a la tienda.
+  rutaInicio() { return this.esAdmin() ? '/inicio' : '/tienda'; }
 
   get token(): string | null {
     return this.sesion()?.token ?? null;

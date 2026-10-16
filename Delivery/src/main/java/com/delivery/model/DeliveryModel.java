@@ -23,6 +23,10 @@ public class DeliveryModel {
         return deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery no encontrado"));
     }
+    
+    public Delivery BuscarPorPedido(Long pedidoId) {
+        return deliveryRepository.findByPedidoId(pedidoId).orElse(null);
+    }
 
     public Delivery Registrar(Delivery delivery) {
         delivery.setEstado("PENDIENTE");

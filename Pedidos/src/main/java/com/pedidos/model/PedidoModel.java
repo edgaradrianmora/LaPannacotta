@@ -28,14 +28,19 @@ public class PedidoModel {
     public List<Pedido> Listar() {
         return pedidoRepository.findAll();
     }
+    
+    public List<Pedido> ListarPorUsuario(String username) {
+        return pedidoRepository.findByClienteUsernameOrderByFechaDesc(username);
+    }
 
     public Pedido BuscarPorId(Long id) {
         return pedidoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
     }
 
-    public Pedido Registrar(PedidoRequest request) {
+    public Pedido Registrar(PedidoRequest request, String username) {
         Pedido pedido = new Pedido();
+        pedido.setClienteUsername(username);
         pedido.setClienteNombre(request.getClienteNombre());
         pedido.setClienteTelefono(request.getClienteTelefono());
         pedido.setDireccionEntrega(request.getDireccionEntrega());

@@ -31,6 +31,11 @@ public class DeliveryController {
     public Delivery BuscarPorId(@PathVariable Long id) {
         return deliveryModel.BuscarPorId(id);
     }
+    
+    @GetMapping("/pedido/{pedidoId}")
+    public Delivery BuscarPorPedido(@PathVariable Long pedidoId) {
+        return deliveryModel.BuscarPorPedido(pedidoId);
+    }
 
     @PostMapping
     public Delivery Registrar(@RequestBody Delivery delivery) {
@@ -49,6 +54,6 @@ public class DeliveryController {
 
     @GetMapping("/aviso")
     public String Aviso() {
-        return "Delivery ...!!!";
+        return "Delivery";
     }
 }

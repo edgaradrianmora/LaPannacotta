@@ -167,7 +167,7 @@ export class Pedidos implements OnInit {
 
   prod(id: unknown) { return this.productos().find((x) => x.id === id) ?? null; }
   esConfirmado(p: Pedido) { return (p.estado ?? '').toUpperCase() === 'CONFIRMADO'; }
-  lineas(p: Pedido): DetallePedido[] { return p.detalles ?? p.items ?? []; }
+  lineas(p: Pedido): DetallePedido[] { return p.detalle ?? p.detalles ?? p.items ?? []; }
 
   cargar() {
     this.cargando.set(true);

@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,8 +25,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/pedidos/aviso").permitAll()
-                    .requestMatchers("/actuator/**").permitAll()  
-                    .anyRequest().authenticated()
+                    .requestMatchers("/actuator/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/pedidos/mis-pedidos").hasAnyRole("CLIENTE", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/pedidos").hasAnyRole("CLIENTE", "ADMIN")
+                    .anyRequest().hasRole("ADMIN")
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

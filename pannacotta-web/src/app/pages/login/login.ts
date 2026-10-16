@@ -120,7 +120,7 @@ export class Login {
     this.error.set('');
     this.cargando.set(true);
     this.auth.login(this.formLogin.getRawValue()).subscribe({
-      next: () => { this.cargando.set(false); this.router.navigate(['/inicio']); },
+      next: () => { this.cargando.set(false); this.router.navigate([this.auth.rutaInicio()]); },
       error: (e) => { this.cargando.set(false); this.error.set(mensajeError(e)); }
     });
   }
