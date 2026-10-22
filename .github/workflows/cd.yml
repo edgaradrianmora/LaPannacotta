@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        servicio: [Eureka, Gateway, Auth, Productos, Pedidos, Delivery]
+        servicio: [Eureka, Gateway, Auth, Productos, Pedidos, Delivery, Notificaciones]
     steps:
       - name: Descargar el código del commit que pasó CI
         uses: actions/checkout@v4

@@ -14,10 +14,10 @@ jobs:
     name: Backend - ${{ matrix.servicio }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false            # si falla un servicio, los demás siguen probándose
+      fail-fast: false         
       matrix:
-        servicio: [Eureka, Gateway, Auth, Productos, Pedidos, Delivery]
-    defaults:
+        servicio: [Eureka, Gateway, Auth, Productos, Pedidos, Delivery, Notificaciones]
+            defaults:
       run:
         working-directory: ${{ matrix.servicio }}
     steps:
