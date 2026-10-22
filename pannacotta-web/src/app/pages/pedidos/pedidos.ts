@@ -14,7 +14,7 @@ import { Foto } from '../../shared/foto';
     <div class="cabecera">
       <div class="pagina-titulo" style="margin:0">
         <h1>Pedidos</h1>
-        <p>Registra el pedido, confírmalo para descontar stock y se genera la entrega automáticamente.</p>
+        <p>Registra el pedido, confírmalo y se genera la entrega</p>
       </div>
       <button class="btn" (click)="nuevo()">Registrar pedido</button>
     </div>
@@ -167,7 +167,7 @@ export class Pedidos implements OnInit {
 
   prod(id: unknown) { return this.productos().find((x) => x.id === id) ?? null; }
   esConfirmado(p: Pedido) { return (p.estado ?? '').toUpperCase() === 'CONFIRMADO'; }
-  lineas(p: Pedido): DetallePedido[] { return p.detalles ?? p.items ?? []; }
+  lineas(p: Pedido): DetallePedido[] { return p.detalle ?? p.detalles ?? p.items ?? []; }
 
   cargar() {
     this.cargando.set(true);
@@ -193,16 +193,20 @@ export class Pedidos implements OnInit {
   agregarItem() { this.items.push(this.nuevaFila()); }
   quitarItem(i: number) { if (this.items.length > 1) this.items.removeAt(i); }
 
-  guardar() {
+guardar() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.limpiar();
     this.guardando.set(true);
     const v = this.form.getRawValue();
     this.srv.Registrar({
-      clienteNombre: v.clienteNombre,
-      clienteTelefono: v.clienteTelefono,
+      clienteNombre:    v.clienteNombre,
+      clienteTelefono:  v.clienteTelefono,
       direccionEntrega: v.direccionEntrega,
-      items: v.items.map((x) => ({ productoId: x.productoId as number, cantidad: x.cantidad as number }))
+      correoCliente:    '',
+      items: v.items.map((x) => ({
+        productoId: x.productoId as number,
+        cantidad:   x.cantidad   as number
+      }))
     }).subscribe({
       next: () => {
         this.guardando.set(false);
@@ -212,7 +216,7 @@ export class Pedidos implements OnInit {
       },
       error: (e) => { this.guardando.set(false); this.error.set(mensajeError(e)); }
     });
-  }
+}
 
   verDetalle(p: Pedido) {
     if (this.detalle()?.id === p.id) { this.detalle.set(null); return; }

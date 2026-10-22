@@ -50,12 +50,14 @@ export interface DetallePedido {
 export interface Pedido {
   id: number;
   clienteNombre: string;
+  clienteUsername?: string;
   clienteTelefono?: string;
   direccionEntrega: string;
   estado?: string;
   total?: number;
   fecha?: string;
   fechaPedido?: string;
+  detalle?: DetallePedido[];
   detalles?: DetallePedido[];
   items?: DetallePedido[];
 }
@@ -64,6 +66,7 @@ export interface PedidoRequest {
   clienteNombre: string;
   clienteTelefono: string;
   direccionEntrega: string;
+  correoCliente: string;
   items: { productoId: number; cantidad: number }[];
 }
 

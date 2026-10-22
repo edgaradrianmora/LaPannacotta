@@ -1,0 +1,4 @@
+CREATE DATABASE bd_auth;
+CREATE DATABASE bd_productos;
+CREATE DATABASE bd_pedidos;
+CREATE DATABASE bd_delivery;

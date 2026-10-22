@@ -26,9 +26,11 @@ public class Pedido {
     private Long id;
 
     private String clienteNombre;
+    private String clienteUsername;
     private String clienteTelefono;
     private String direccionEntrega;
     private LocalDateTime fecha;
+    private String correoCliente;
     private Double total;
     private String estado;
 

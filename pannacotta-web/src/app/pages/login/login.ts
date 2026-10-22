@@ -12,7 +12,7 @@ import { mensajeError } from '../../core/errores';
       <aside class="lado" aria-hidden="true">
         <div class="cupula"></div>
         <div class="plato"></div>
-        <p class="lema">Pasteles hechos al día,<br />entregados en Comas.</p>
+        <p class="lema">Pasteles hechos al día</p>
       </aside>
       <div class="caja">
         <h1>La Pannacotta</h1>
@@ -120,7 +120,7 @@ export class Login {
     this.error.set('');
     this.cargando.set(true);
     this.auth.login(this.formLogin.getRawValue()).subscribe({
-      next: () => { this.cargando.set(false); this.router.navigate(['/inicio']); },
+      next: () => { this.cargando.set(false); this.router.navigate([this.auth.rutaInicio()]); },
       error: (e) => { this.cargando.set(false); this.error.set(mensajeError(e)); }
     });
   }

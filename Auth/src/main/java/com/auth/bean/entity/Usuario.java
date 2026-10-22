@@ -24,6 +24,7 @@ public class Usuario {
     private String username;
     private String password;
     private String nombre;
+    private String correo;
     private String rol;
     private String estado;
 }

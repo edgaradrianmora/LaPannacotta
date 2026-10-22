@@ -9,5 +9,6 @@ public class PedidoRequest {
     private String clienteNombre;
     private String clienteTelefono;
     private String direccionEntrega;
+    private String correoCliente;
     private List<ItemPedidoRequest> items;
 }

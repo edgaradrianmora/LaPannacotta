@@ -8,6 +8,10 @@
 !/Productos/
 !/Pedidos/
 !/Delivery/
+!/Notificaciones/
+!/infra/
+!/iniciar-todo.bat
+!/README.md
 !/pannacotta-web/
 !/k8s/
 !/docker-compose.yml
@@ -20,3 +24,4 @@ dist/
 .project
 .factorypath
 *.log
+secrets.properties

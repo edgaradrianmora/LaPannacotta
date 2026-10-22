@@ -9,6 +9,7 @@ export class PedidoService {
   private base = `${API_URL}/pedidos`;
 
   Listar() { return this.http.get<Pedido[]>(this.base); }
+  MisPedidos() { return this.http.get<Pedido[]>(`${this.base}/mis-pedidos`); }
   Obtener(id: number) { return this.http.get<Pedido>(`${this.base}/${id}`); }
   Registrar(p: PedidoRequest) { return this.http.post<Pedido>(this.base, p); }
   Confirmar(id: number) { return this.http.put<Pedido>(`${this.base}/${id}/confirmar`, null); }
