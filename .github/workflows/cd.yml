@@ -8,11 +8,11 @@ on:
     workflows: [CI]
     types: [completed]
     branches: [main]
-  workflow_dispatch:              # también se puede lanzar a mano desde la pestaña Actions
+  workflow_dispatch:              
 
 permissions:
   contents: read
-  packages: write                 # permite publicar imágenes con el GITHUB_TOKEN
+  packages: write                
 
 jobs:
   imagenes:

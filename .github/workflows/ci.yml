@@ -1,5 +1,5 @@
 # INTEGRACIÓN CONTINUA (CI)
-# Se ejecuta en cada push y en cada pull request: compila y prueba los 6 servicios
+# Se ejecuta en cada push y en cada pull request: compila y prueba los 7 servicios
 # Java y compila Angular. Si algo falla, GitHub marca la ejecución en rojo.
 name: CI
 
@@ -17,7 +17,7 @@ jobs:
       fail-fast: false         
       matrix:
         servicio: [Eureka, Gateway, Auth, Productos, Pedidos, Delivery, Notificaciones]
-            defaults:
+    defaults:
       run:
         working-directory: ${{ matrix.servicio }}
     steps:
