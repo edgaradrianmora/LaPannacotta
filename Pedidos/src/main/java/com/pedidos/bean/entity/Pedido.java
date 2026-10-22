@@ -30,6 +30,7 @@ public class Pedido {
     private String clienteTelefono;
     private String direccionEntrega;
     private LocalDateTime fecha;
+    private String correoCliente;
     private Double total;
     private String estado;
 

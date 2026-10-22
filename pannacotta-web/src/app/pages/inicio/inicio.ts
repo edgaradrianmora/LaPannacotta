@@ -16,7 +16,7 @@ import { Foto } from '../../shared/foto';
   template: `
     <section class="saludo">
       <h1>Hola, {{ auth.usuario()?.username }}</h1>
-      <p>{{ hoy }}. Esto es lo que pasa hoy en la pastelería.</p>
+      <p>{{ hoy }}</p>
     </section>
 
     @if (cargando()) {

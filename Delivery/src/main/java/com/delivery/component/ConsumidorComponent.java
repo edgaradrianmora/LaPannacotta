@@ -2,6 +2,7 @@ package com.delivery.component;
 
 import java.time.LocalDateTime;
 
+import com.delivery.bean.dto.PedidoEventoDto;
 import com.delivery.bean.entity.Delivery;
 import com.delivery.configuration.RabbitMQConfiguration;
 import com.delivery.repository.DeliveryRepository;
@@ -16,29 +17,34 @@ public class ConsumidorComponent {
 
     private final DeliveryRepository deliveryRepository;
 
-    @RabbitListener(queues = RabbitMQConfiguration.QUEUE)
-    public void Procesar(String mensaje) {
-        System.out.println("Consumiendo: " + mensaje);
+    @RabbitListener(queues = RabbitMQConfiguration.COLA_PEDIDO_CONFIRMADO_DELIVERY)
+    public void ProcesarPedidoConfirmado(PedidoEventoDto evento) {
 
-        try {
-            String[] partes = mensaje.replace("PEDIDO_CONFIRMADO: ", "").split(" - ");
+        System.out.println("[RabbitMQ] Recibido evento: " + evento.getEventoTipo()
+                + " - Pedido #" + evento.getPedidoId());
 
-            Long pedidoId = Long.parseLong(partes[0].replace("Pedido N. ", "").trim());
-            String clienteNombre = partes[1].replace("Cliente: ", "").trim();
-            String direccion = partes[2].replace("Direccion: ", "").trim();
-
-            Delivery delivery = new Delivery();
-            delivery.setPedidoId(pedidoId);
-            delivery.setClienteNombre(clienteNombre);
-            delivery.setDireccion(direccion);
-            delivery.setEstado("PENDIENTE");
-            delivery.setFechaAsignacion(LocalDateTime.now());
-
-            deliveryRepository.save(delivery);
-
-            System.out.println("Delivery creado automaticamente para el pedido " + pedidoId);
-        } catch (Exception e) {
-            System.out.println("Error al procesar el mensaje de pedido confirmado: " + e.getMessage());
+        boolean yaExiste = deliveryRepository
+                .findByPedidoId(evento.getPedidoId()).isPresent();
+        if (yaExiste) {
+            System.out.println("[RabbitMQ] Delivery ya existe para pedido #"
+                    + evento.getPedidoId() + ". Se ignora.");
+            return;
         }
+
+        Delivery delivery = new Delivery();
+        delivery.setPedidoId(evento.getPedidoId());
+        delivery.setClienteNombre(evento.getClienteNombre());
+        delivery.setClienteUsername(evento.getClienteUsername());
+        delivery.setClienteTelefono(evento.getClienteTelefono());
+        delivery.setDireccion(evento.getDireccionEntrega());
+        delivery.setCorreoCliente(evento.getCorreo()); 
+        delivery.setEstado("PENDIENTE");
+        delivery.setFechaAsignacion(LocalDateTime.now());
+
+        deliveryRepository.save(delivery);
+
+        System.out.println("[RabbitMQ] ✅ Delivery creado para pedido #"
+                + evento.getPedidoId()
+                + " correo: " + evento.getCorreo());
     }
 }

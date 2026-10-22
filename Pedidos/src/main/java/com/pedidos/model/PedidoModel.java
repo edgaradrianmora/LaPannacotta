@@ -3,10 +3,9 @@ package com.pedidos.model;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.pedidos.bean.dto.ItemPedidoRequest;
-import com.pedidos.bean.dto.PedidoRequest;
-import com.pedidos.bean.dto.ProductoDto;
+import com.pedidos.bean.dto.*;
 import com.pedidos.bean.entity.DetallePedido;
 import com.pedidos.bean.entity.Pedido;
 import com.pedidos.configuration.RabbitMQConfiguration;
@@ -25,20 +24,41 @@ public class PedidoModel {
     private final ProductoUseCase productoUseCase;
     private final RabbitTemplate rabbitTemplate;
 
-    public List<Pedido> Listar() {
-        return pedidoRepository.findAll();
-    }
-    
-    public List<Pedido> ListarPorUsuario(String username) {
-        return pedidoRepository.findByClienteUsernameOrderByFechaDesc(username);
+    private static final List<String> ESTADOS_VALIDOS =
+            List.of("PENDIENTE", "CONFIRMADO", "CANCELADO");
+
+    public List<PedidoResponseDto> Listar() {
+        return pedidoRepository.findAll()
+                .stream()
+                .map(this::ToResponseDto)
+                .collect(Collectors.toList());
     }
 
-    public Pedido BuscarPorId(Long id) {
-        return pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+    public List<PedidoResponseDto> ListarPorUsuario(String username) {
+        return pedidoRepository.findByClienteUsernameOrderByFechaDesc(username)
+                .stream()
+                .map(this::ToResponseDto)
+                .collect(Collectors.toList());
     }
 
-    public Pedido Registrar(PedidoRequest request, String username) {
+    public PedidoResponseDto BuscarPorId(Long id) {
+        Pedido pedido = ObtenerEntidad(id);
+        return ToResponseDto(pedido);
+    }
+
+    public PedidoResponseDto Registrar(PedidoRequest request, String username) {
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new RuntimeException("El pedido debe tener al menos un producto.");
+        }
+
+        if (request.getClienteNombre() == null || request.getClienteNombre().isBlank()) {
+            throw new RuntimeException("El nombre del cliente es obligatorio.");
+        }
+        if (request.getDireccionEntrega() == null || request.getDireccionEntrega().isBlank()) {
+            throw new RuntimeException("La dirección de entrega es obligatoria.");
+        }
+
         Pedido pedido = new Pedido();
         pedido.setClienteUsername(username);
         pedido.setClienteNombre(request.getClienteNombre());
@@ -46,12 +66,25 @@ public class PedidoModel {
         pedido.setDireccionEntrega(request.getDireccionEntrega());
         pedido.setFecha(LocalDateTime.now());
         pedido.setEstado("PENDIENTE");
+        pedido.setCorreoCliente(request.getCorreoCliente());
 
         List<DetallePedido> detalles = new ArrayList<>();
         double total = 0.0;
 
         for (ItemPedidoRequest item : request.getItems()) {
+
+            if (item.getCantidad() == null || item.getCantidad() <= 0) {
+                throw new RuntimeException("La cantidad debe ser mayor a cero.");
+            }
+
             ProductoDto producto = productoUseCase.BuscarPorId(item.getProductoId());
+
+            if (producto.getStock() < item.getCantidad()) {
+                throw new RuntimeException(
+                    "Stock insuficiente para '" + producto.getNombre() + "'. "
+                    + "Disponible: " + producto.getStock()
+                    + ", solicitado: " + item.getCantidad() + ".");
+            }
 
             DetallePedido detalle = new DetallePedido();
             detalle.setPedido(pedido);
@@ -67,11 +100,21 @@ public class PedidoModel {
         pedido.setDetalle(detalles);
         pedido.setTotal(total);
 
-        return pedidoRepository.save(pedido);
+        Pedido guardado = pedidoRepository.save(pedido);
+
+        PublicarEvento(guardado, RabbitMQConfiguration.RK_PEDIDO_RECIBIDO, "PEDIDO_CREADO");
+
+        return ToResponseDto(guardado);
     }
 
-    public Pedido Confirmar(Long id) {
-        Pedido pedido = BuscarPorId(id);
+    public PedidoResponseDto Confirmar(Long id) {
+        Pedido pedido = ObtenerEntidad(id);
+
+        if (!"PENDIENTE".equals(pedido.getEstado())) {
+            throw new RuntimeException(
+                "No se puede confirmar un pedido en estado: " + pedido.getEstado()
+                + ". Solo se pueden confirmar pedidos en estado PENDIENTE.");
+        }
 
         for (DetallePedido detalle : pedido.getDetalle()) {
             productoUseCase.DescontarStock(detalle.getProductoId(), detalle.getCantidad());
@@ -80,22 +123,75 @@ public class PedidoModel {
         pedido.setEstado("CONFIRMADO");
         Pedido confirmado = pedidoRepository.save(pedido);
 
-        Publicar(confirmado);
+        PublicarEvento(confirmado, RabbitMQConfiguration.RK_PEDIDO_CONFIRMADO, "PEDIDO_CONFIRMADO");
 
-        return confirmado;
+        return ToResponseDto(confirmado);
     }
 
     public void Eliminar(Long id) {
+        Pedido pedido = ObtenerEntidad(id);
+
+        if ("CONFIRMADO".equals(pedido.getEstado())) {
+            throw new RuntimeException(
+                "No se puede eliminar un pedido ya confirmado.");
+        }
+
         pedidoRepository.deleteById(id);
     }
 
-    private void Publicar(Pedido pedido) {
-        String mensaje = "PEDIDO_CONFIRMADO: Pedido N. " + pedido.getId()
-                + " - Cliente: " + pedido.getClienteNombre()
-                + " - Direccion: " + pedido.getDireccionEntrega()
-                + " - Total: " + pedido.getTotal();
+    private Pedido ObtenerEntidad(Long id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
+    }
 
-        rabbitTemplate.convertAndSend(RabbitMQConfiguration.EXCHANGE, RabbitMQConfiguration.ROUTING_KEY, mensaje);
-        System.out.println("Envio: " + mensaje);
+    private void PublicarEvento(Pedido pedido, String routingKey, String tipoEvento) {
+        PedidoEventoDto evento = new PedidoEventoDto(
+                pedido.getId(),
+                pedido.getClienteNombre(),
+                pedido.getClienteUsername(),
+                pedido.getClienteTelefono(),
+                pedido.getDireccionEntrega(),
+                pedido.getCorreoCliente(),
+                pedido.getTotal(),
+                pedido.getEstado(),
+                tipoEvento
+        );
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfiguration.EXCHANGE,
+                routingKey,
+                evento
+        );
+
+        System.out.println("[RabbitMQ] Publicado '" + routingKey
+                + "' Pedido #" + pedido.getId()
+                + " correo: " + pedido.getCorreoCliente());
+    }
+
+    private PedidoResponseDto ToResponseDto(Pedido p) {
+        List<DetallePedidoDto> detalleDto = p.getDetalle() == null
+                ? List.of()
+                : p.getDetalle().stream()
+                    .map(d -> new DetallePedidoDto(
+                            d.getId(),
+                            d.getProductoId(),
+                            null,             
+                            d.getCantidad(),
+                            d.getPrecioUnitario(),
+                            d.getSubtotal()))
+                    .collect(Collectors.toList());
+
+        return new PedidoResponseDto(
+                p.getId(),
+                p.getClienteNombre(),
+                p.getClienteUsername(),
+                p.getClienteTelefono(),
+                p.getDireccionEntrega(),
+                p.getCorreoCliente(),
+                p.getFecha(),
+                p.getTotal(),
+                p.getEstado(),
+                detalleDto
+        );
     }
 }

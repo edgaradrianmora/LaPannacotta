@@ -19,7 +19,7 @@ const PASOS = ['Recibido', 'Confirmado', 'Repartidor asignado', 'En camino', 'En
     <div class="cabecera">
       <div class="pagina-titulo" style="margin:0">
         <h1>Mis pedidos</h1>
-        <p>Sigue cada pedido en tiempo real. Esta pantalla se actualiza sola cada 10 segundos.</p>
+        <p>Sigue cada pedido en tiempo real</p>
       </div>
       <a class="btn" routerLink="/tienda">Hacer otro pedido</a>
     </div>

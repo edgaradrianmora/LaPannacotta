@@ -1,0 +1,59 @@
+# Notificaciones (consumidor de RabbitMQ + envio de correos).
+# Las credenciales de Gmail NO estan aqui: iniciar-todo.bat crea el Secret
+# "notificaciones-mail" a partir de Notificaciones/secrets.properties.
+# Si el Secret no existe, el pod arranca igual y simplemente no envia correos.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notificaciones
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notificaciones
+  template:
+    metadata:
+      labels:
+        app: notificaciones
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        - name: esperar-rabbitmq
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z rabbitmq 5672; do echo esperando rabbitmq; sleep 3; done']
+      containers:
+        - name: notificaciones
+          image: pannacotta-notificaciones:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8821
+          env:
+            - name: EUREKA_URL
+              value: "http://eureka:8761/eureka/"
+            - name: RABBIT_HOST
+              value: "rabbitmq"
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:file:/etc/notificaciones/secrets.properties"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          volumeMounts:
+            - name: correo
+              mountPath: /etc/notificaciones
+              readOnly: true
+          resources: {requests: {memory: "256Mi"}, limits: {memory: "640Mi"}}
+      volumes:
+        - name: correo
+          secret:
+            secretName: notificaciones-mail
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notificaciones
+spec:
+  selector:
+    app: notificaciones
+  ports:
+    - port: 8821
+      targetPort: 8821

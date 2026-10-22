@@ -66,6 +66,7 @@ export interface PedidoRequest {
   clienteNombre: string;
   clienteTelefono: string;
   direccionEntrega: string;
+  correoCliente: string;
   items: { productoId: number; cantidad: number }[];
 }
 

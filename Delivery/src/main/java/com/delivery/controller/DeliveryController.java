@@ -2,16 +2,14 @@ package com.delivery.controller;
 
 import java.util.List;
 
+import com.delivery.bean.dto.DeliveryActualizarRequest;
+import com.delivery.bean.dto.DeliveryRegistrarRequest;
+import com.delivery.bean.dto.DeliveryResponseDto;
 import com.delivery.bean.entity.Delivery;
 import com.delivery.model.DeliveryModel;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,37 +21,61 @@ public class DeliveryController {
     private final DeliveryModel deliveryModel;
 
     @GetMapping
-    public List<Delivery> Listar() {
+    public List<DeliveryResponseDto> Listar() {
         return deliveryModel.Listar();
     }
 
     @GetMapping("/{id}")
-    public Delivery BuscarPorId(@PathVariable Long id) {
-        return deliveryModel.BuscarPorId(id);
+    public ResponseEntity<Object> BuscarPorId(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(deliveryModel.BuscarPorId(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
-    
+
     @GetMapping("/pedido/{pedidoId}")
-    public Delivery BuscarPorPedido(@PathVariable Long pedidoId) {
-        return deliveryModel.BuscarPorPedido(pedidoId);
+    public ResponseEntity<Object> BuscarPorPedido(@PathVariable Long pedidoId) {
+        DeliveryResponseDto dto = deliveryModel.BuscarPorPedido(pedidoId);
+        return dto != null
+                ? ResponseEntity.ok(dto)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No hay delivery para el pedido #" + pedidoId);
     }
 
     @PostMapping
-    public Delivery Registrar(@RequestBody Delivery delivery) {
-        return deliveryModel.Registrar(delivery);
+    public ResponseEntity<Object> Registrar(@RequestBody DeliveryRegistrarRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(deliveryModel.Registrar(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public Delivery Actualizar(@PathVariable Long id, @RequestBody Delivery delivery) {
-        return deliveryModel.Actualizar(id, delivery);
+    public ResponseEntity<Object> Actualizar(
+            @PathVariable Long id,
+            @RequestBody DeliveryActualizarRequest request) {
+        try {
+            return ResponseEntity.ok(deliveryModel.Actualizar(id, request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void Eliminar(@PathVariable Long id) {
-        deliveryModel.Eliminar(id);
+    public ResponseEntity<Object> Eliminar(@PathVariable Long id) {
+        try {
+            deliveryModel.Eliminar(id);
+            return ResponseEntity.ok("Delivery eliminado correctamente.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @GetMapping("/aviso")
     public String Aviso() {
-        return "Delivery";
+        return "MS Delivery - La Pannacotta";
     }
 }

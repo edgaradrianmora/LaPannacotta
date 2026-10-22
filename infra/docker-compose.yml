@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16    
+    container_name: postgres-pannacotta
+    environment:
+      POSTGRES_PASSWORD: sql
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    volumes:
+      - pgdata_pannacotta:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+volumes:
+  pgdata_pannacotta:

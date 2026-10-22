@@ -88,7 +88,7 @@ import { Foto } from '../../shared/foto';
           </ul>
           <div class="total"><span>Total</span><strong>{{ carrito.total() | currency: 'S/ ' }}</strong></div>
 
-          <form [formGroup]="form" (ngSubmit)="pedir()">
+<form [formGroup]="form" (ngSubmit)="pedir()">
             <div class="campo">
               <label for="cn">Tu nombre</label>
               <input id="cn" formControlName="clienteNombre" [class.invalido]="inv('clienteNombre')" />
@@ -104,6 +104,15 @@ import { Foto } from '../../shared/foto';
               <input id="de" formControlName="direccionEntrega" [class.invalido]="inv('direccionEntrega')" />
               @if (inv('direccionEntrega')) { <span class="msg-error">Indica dónde entregarlo.</span> }
             </div>
+            <div class="campo">
+            <label for="ce">Correo electrónico</label>
+            <input id="ce" type="email" formControlName="correoCliente"
+                  placeholder="para recibir notificaciones"
+                  [class.invalido]="inv('correoCliente')" />
+            @if (inv('correoCliente')) {
+              <span class="msg-error">Ingresa un correo válido.</span>
+            }
+          </div>
             <button class="btn" type="submit" [disabled]="enviando()">{{ enviando() ? 'Enviando…' : 'Hacer pedido' }}</button>
           </form>
         }
@@ -157,13 +166,14 @@ export class Tienda implements OnInit {
   busqueda = signal('');
   categoria = signal('');
 
-  form = this.fb.nonNullable.group({
+form = this.fb.nonNullable.group({
     clienteNombre: ['', Validators.required],
     clienteTelefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
-    direccionEntrega: ['', Validators.required]
+    direccionEntrega: ['', Validators.required],
+    correoCliente: ['', [Validators.required, Validators.email]]
+
   });
 
-  // El cliente solo ve los productos que están a la venta.
   private activos = computed(() => this.productos().filter((p) => (p.estado ?? 'ACTIVO').toUpperCase() !== 'INACTIVO'));
   categorias = computed(() => [...new Set(this.activos().map((p) => p.categoria).filter(Boolean))].sort());
   filtrados = computed(() => {
@@ -186,14 +196,20 @@ export class Tienda implements OnInit {
     return !!c && c.invalid && c.touched;
   }
 
-  pedir() {
+pedir() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.error.set('');
     this.enviando.set(true);
     const v = this.form.getRawValue();
     this.pedSrv.Registrar({
-      ...v,
-      items: this.carrito.items().map((l) => ({ productoId: l.producto.id as number, cantidad: l.cantidad }))
+      clienteNombre:    v.clienteNombre,
+      clienteTelefono:  v.clienteTelefono,
+      direccionEntrega: v.direccionEntrega,
+      correoCliente:    v.correoCliente,
+      items: this.carrito.items().map((l) => ({
+        productoId: l.producto.id as number,
+        cantidad: l.cantidad
+      }))
     }).subscribe({
       next: () => {
         this.enviando.set(false);
@@ -202,5 +218,5 @@ export class Tienda implements OnInit {
       },
       error: (e) => { this.enviando.set(false); this.error.set(mensajeError(e)); }
     });
-  }
+}
 }

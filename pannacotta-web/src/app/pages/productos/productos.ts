@@ -14,7 +14,7 @@ import { Foto } from '../../shared/foto';
     <div class="cabecera">
       <div class="pagina-titulo" style="margin:0">
         <h1>Vitrina de productos</h1>
-        <p>{{ productos().length }} productos registrados. Agrega fotos para que el catálogo se vea tan bien como sabe.</p>
+        <p>{{ productos().length }} productos registrados</p>
       </div>
       <button class="btn" (click)="nuevo()">Agregar producto</button>
     </div>

@@ -41,3 +41,7 @@ spring:
               uri: lb://Delivery
               predicates:
                 - Path=/delivery/**
+            - id: notificaciones
+              uri: lb://notificaciones
+              predicates:
+               - Path=/notificaciones/**

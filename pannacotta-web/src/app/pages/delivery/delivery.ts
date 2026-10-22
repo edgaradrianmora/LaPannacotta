@@ -12,7 +12,7 @@ import { mensajeError } from '../../core/errores';
     <div class="cabecera">
       <div class="pagina-titulo" style="margin:0">
         <h1>Delivery</h1>
-        <p>Las entregas aparecen solas al confirmar un pedido. Aquí asignas repartidor y marcas el avance.</p>
+        <p>Asignar un repartidor y marcas el avance</p>
       </div>
       <button class="btn" (click)="nuevo()">Crear entrega manual</button>
     </div>
@@ -149,7 +149,6 @@ export class DeliveryPage implements OnInit {
     this.mostrarForm.set(true);
   }
 
-  // Al editar solo se piden repartidor y estado: los otros campos se desactivan para no validarlos.
   private activarCamposCreacion(activo: boolean) {
     for (const c of ['pedidoId', 'clienteNombre', 'direccion']) {
       activo ? this.form.get(c)?.enable() : this.form.get(c)?.disable();

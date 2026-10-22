@@ -12,7 +12,7 @@ import { mensajeError } from '../../core/errores';
       <aside class="lado" aria-hidden="true">
         <div class="cupula"></div>
         <div class="plato"></div>
-        <p class="lema">Pasteles hechos al día,<br />entregados en Comas.</p>
+        <p class="lema">Pasteles hechos al día</p>
       </aside>
       <div class="caja">
         <h1>La Pannacotta</h1>

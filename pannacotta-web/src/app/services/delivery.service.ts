@@ -13,7 +13,9 @@ export class DeliveryService {
   PorPedido(pedidoId: number) { return this.http.get<Delivery | null>(`${this.base}/pedido/${pedidoId}`); }
   Obtener(id: number) { return this.http.get<Delivery>(`${this.base}/${id}`); }
   Registrar(d: Delivery) { return this.http.post<Delivery>(this.base, d); }
-  Actualizar(id: number, d: Partial<Delivery>) { return this.http.put<Delivery>(`${this.base}/${id}`, d); }
+  Actualizar(id: number, d: { repartidor?: string; estado: string }) {
+  return this.http.put<Delivery>(`${this.base}/${id}`, d);
+}
   Eliminar(id: number) { return this.http.delete<void>(`${this.base}/${id}`); }
   Aviso() { return this.http.get(`${this.base}/aviso`, { responseType: 'text' }); }
 }
