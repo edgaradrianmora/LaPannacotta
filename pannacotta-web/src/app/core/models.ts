@@ -70,11 +70,19 @@ export interface PedidoRequest {
   items: { productoId: number; cantidad: number }[];
 }
 
+export interface Repartidor {
+  id?: number;
+  nombre: string;
+  telefono?: string;
+  estado: string;
+}
+
 export interface Delivery {
   id?: number;
   pedidoId: number;
   clienteNombre: string;
   direccion: string;
+  repartidorId?: number;
   repartidor?: string;
   fechaAsignacion?: string;
   fechaEntrega?: string;

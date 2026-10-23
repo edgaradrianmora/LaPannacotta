@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeliveryActualizarRequest {
+
+    private Long repartidorId;
+
     private String repartidor;
+
     private String estado;
 }
