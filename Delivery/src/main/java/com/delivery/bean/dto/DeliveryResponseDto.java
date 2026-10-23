@@ -1,6 +1,7 @@
 package com.delivery.bean.dto;
 
 import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ public class DeliveryResponseDto {
     private String clienteUsername;
     private String clienteTelefono;
     private String direccion;
+    private Long repartidorId;
     private String repartidor;
     private String correoCliente;
     private LocalDateTime fechaAsignacion;
